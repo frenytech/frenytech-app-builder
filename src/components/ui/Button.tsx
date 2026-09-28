@@ -1,10 +1,9 @@
-import { Link } from "@tanstack/react-router";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "secondary" | "ghost" | "outline";
-type Size = "sm" | "md" | "lg";
+export type Variant = "primary" | "secondary" | "ghost" | "outline";
+export type Size = "sm" | "md" | "lg";
 
 const base =
   "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60";
@@ -35,63 +34,25 @@ export function Button({ variant = "primary", size = "md", className, ...props }
   return <button className={buttonClasses(variant, size, className)} {...props} />;
 }
 
-interface LinkButtonProps {
-  to: string;
+interface AnchorButtonProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   variant?: Variant;
   size?: Size;
-  className?: string;
+  external?: boolean;
   children: ReactNode;
-  hash?: string;
 }
 
-export function LinkButton({
-  to,
-  variant = "primary",
-  size = "md",
-  className,
-  children,
-  hash,
-}: LinkButtonProps) {
-  return (
-    <Link
-      to={to}
-      hash={hash}
-      className={buttonClasses(variant, size, className)}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      {...({} as any)}
-    >
-      {children}
-    </Link>
-  );
-}
-
-export function ExternalButton({
-  href,
+export function AnchorButton({
   variant = "outline",
   size = "md",
   className,
-  children,
-  download,
-  label,
-}: {
-  href: string;
-  variant?: Variant;
-  size?: Size;
-  className?: string;
-  children: ReactNode;
-  download?: boolean;
-  label?: string;
-}) {
+  external = false,
+  ...props
+}: AnchorButtonProps) {
   return (
     <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={label}
-      {...(download ? { download: "" } : {})}
       className={buttonClasses(variant, size, className)}
-    >
-      {children}
-    </a>
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      {...props}
+    />
   );
 }
