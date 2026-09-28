@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { AnchorButton, Button } from "@/components/ui/Button";
+import { AnchorButton, Button } from "@/components/ui/ft-button";
 import { formatBuildTime } from "@/lib/validation";
 import type { BuildSuccess } from "@/types/build";
 

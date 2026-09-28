@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string;
   label: string;
-  hint?: string;
-  error?: string;
+  hint?: string | undefined;
+  error?: string | undefined;
 }
 
 export function Field({ id, label, hint, error, className, ...props }: FieldProps) {
