@@ -4,7 +4,7 @@ import { BuildProgress } from "@/components/builder/BuildProgress";
 import { Field } from "@/components/builder/Field";
 import { IconPreview } from "@/components/builder/IconPreview";
 import { SuccessCard } from "@/components/builder/SuccessCard";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/ft-button";
 import { requestBuild } from "@/lib/build-client";
 import { hasErrors, suggestPackageName, validateBuildConfig, type BuildErrors } from "@/lib/validation";
 import type { BuildConfig, BuildStage, BuildSuccess } from "@/types/build";

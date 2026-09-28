@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { Logo } from "@/components/brand/Logo";
-import { AnchorButton } from "@/components/ui/Button";
+import { AnchorButton } from "@/components/ui/ft-button";
 
 const NAV = [
   { label: "Web2APK Builder", to: "/" as const },
