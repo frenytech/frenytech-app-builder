@@ -9,6 +9,10 @@ export interface BuildConfig {
   iconUrl: string;
 }
 
+export interface BuildFormConfig extends Omit<BuildConfig, "iconUrl"> {
+  iconFile: File | null;
+}
+
 /** The only shape the browser ever receives from our server route. */
 export interface BuildSuccess {
   success: true;
@@ -33,6 +37,7 @@ export type BuildErrorCode =
   | "upstream_error"
   | "upstream_invalid_response"
   | "missing_download_url"
+  | "icon_upload_failed"
   | "timeout"
   | "network_error"
   | "server_error";

@@ -1,6 +1,6 @@
-import type { BuildConfig } from "@/types/build";
+import type { BuildConfig, BuildFormConfig } from "@/types/build";
 
-export type BuildErrors = Partial<Record<keyof BuildConfig, string>>;
+export type BuildErrors = Partial<Record<keyof BuildFormConfig, string>>;
 
 const PACKAGE_RE = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/i;
 const VERSION_NAME_RE = /^\d+(\.\d+){0,3}([-+][A-Za-z0-9.-]+)?$/;
@@ -39,7 +39,7 @@ const JAVA_KEYWORDS = new Set([
   "while",
 ]);
 
-export function validateBuildConfig(config: BuildConfig): BuildErrors {
+export function validateBuildConfig(config: BuildConfig | BuildFormConfig): BuildErrors {
   const errors: BuildErrors = {};
 
   const websiteUrl = config.websiteUrl.trim();
@@ -70,9 +70,13 @@ export function validateBuildConfig(config: BuildConfig): BuildErrors {
   else if (Number(versionCode) < 1) errors.versionCode = "Version code must be 1 or higher.";
   else if (Number(versionCode) > 2100000000) errors.versionCode = "Version code is too large.";
 
-  const iconUrl = config.iconUrl.trim();
-  if (!iconUrl) errors.iconUrl = "Icon URL is required.";
-  else if (!isHttpUrl(iconUrl)) errors.iconUrl = "Enter a direct https URL to a PNG icon.";
+  if ("iconFile" in config) {
+    if (!config.iconFile) errors.iconFile = "App icon is required.";
+  } else {
+    const iconUrl = config.iconUrl.trim();
+    if (!iconUrl) errors.iconFile = "App icon is required.";
+    else if (!isHttpUrl(iconUrl)) errors.iconFile = "The uploaded icon could not be prepared.";
+  }
 
   return errors;
 }

@@ -46,7 +46,7 @@ export const Route = createFileRoute("/")({
 const STEPS = [
   {
     title: "Describe your app",
-    body: "Point the builder at your live website and set the app name, package name, version and icon.",
+    body: "Point the builder at your live website, set the app details, and choose an icon from your device.",
   },
   {
     title: "We call the build service",
