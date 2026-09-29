@@ -37,16 +37,20 @@ export function BuilderPanel() {
 
   const update = (key: Exclude<keyof BuildFormConfig, "iconFile">) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    if (key === "packageName") packageTouched.current = true;
-    setConfig((prev) => {
-      const next = { ...prev, [key]: value };
-      if (key === "appName" && !packageTouched.current) {
-        next.packageName = suggestPackageName(value);
-      }
-      return next;
-    });
-    setErrors((prev) => ({ ...prev, [key]: undefined }));
+      const value = event.target.value;
+      if (key === "packageName") packageTouched.current = true;
+      setConfig((prev) => {
+        const next = { ...prev, [key]: value };
+        if (key === "appName" && !packageTouched.current) {
+          next.packageName = suggestPackageName(value);
+        }
+        return next;
+      });
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
     };
 
   const reset = () => {
@@ -190,7 +194,12 @@ export function BuilderPanel() {
           error={errors.iconFile}
           onChange={(file, error) => {
             setConfig((prev) => ({ ...prev, iconFile: file }));
-            setErrors((prev) => ({ ...prev, iconFile: error }));
+            setErrors((prev) => {
+              const next = { ...prev };
+              if (error) next.iconFile = error;
+              else delete next.iconFile;
+              return next;
+            });
           }}
         />
 

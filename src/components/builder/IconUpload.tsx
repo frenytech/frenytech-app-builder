@@ -84,10 +84,11 @@ export function IconUpload({ file, error, onChange }: IconUploadProps) {
           </div>
         </div>
       ) : (
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={chooseFile}
-          className="flex min-h-32 w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-input bg-background px-4 py-6 text-center transition-colors hover:border-primary hover:bg-secondary/50"
+          className="h-auto min-h-32 w-full flex-col border-dashed border-input bg-background px-4 py-6 text-center hover:border-primary hover:bg-secondary/50"
         >
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
             <ImagePlus aria-hidden="true" className="h-5 w-5" />
@@ -98,7 +99,7 @@ export function IconUpload({ file, error, onChange }: IconUploadProps) {
               PNG, JPG, JPEG, or WEBP · 5 MB maximum
             </span>
           </span>
-        </button>
+        </Button>
       )}
 
       {error && (

@@ -30,7 +30,7 @@ function HowItWorks() {
         <h2 className="text-lg font-semibold text-foreground">1. You describe the app</h2>
         <p className="mt-2">
           The builder collects the website URL, app name, Android package name, version name,
-          version code and icon URL. Each field is validated in the browser and again on the
+          version code and an icon selected from your device. Each field is validated in the browser and again on the
           server, so an invalid package name or version code never reaches the build service.
         </p>
       </section>
