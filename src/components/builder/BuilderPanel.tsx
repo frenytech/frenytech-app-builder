@@ -2,24 +2,24 @@ import { useEffect, useRef, useState } from "react";
 
 import { BuildProgress } from "@/components/builder/BuildProgress";
 import { Field } from "@/components/builder/Field";
-import { IconPreview } from "@/components/builder/IconPreview";
+import { IconUpload } from "@/components/builder/IconUpload";
 import { SuccessCard } from "@/components/builder/SuccessCard";
 import { Button } from "@/components/ui/ft-button";
 import { requestBuild } from "@/lib/build-client";
 import { hasErrors, suggestPackageName, validateBuildConfig, type BuildErrors } from "@/lib/validation";
-import type { BuildConfig, BuildStage, BuildSuccess } from "@/types/build";
+import type { BuildFormConfig, BuildStage, BuildSuccess } from "@/types/build";
 
-const EMPTY: BuildConfig = {
+const EMPTY: BuildFormConfig = {
   websiteUrl: "",
   appName: "",
   packageName: "",
   versionName: "1.0.0",
   versionCode: "1",
-  iconUrl: "",
+  iconFile: null,
 };
 
 export function BuilderPanel() {
-  const [config, setConfig] = useState<BuildConfig>(EMPTY);
+  const [config, setConfig] = useState<BuildFormConfig>(EMPTY);
   const [errors, setErrors] = useState<BuildErrors>({});
   const [stage, setStage] = useState<BuildStage>("idle");
   const [result, setResult] = useState<BuildSuccess | null>(null);
@@ -35,18 +35,23 @@ export function BuilderPanel() {
     return () => clearInterval(timer);
   }, [building]);
 
-  const update = (key: keyof BuildConfig) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    if (key === "packageName") packageTouched.current = true;
-    setConfig((prev) => {
-      const next = { ...prev, [key]: value };
-      if (key === "appName" && !packageTouched.current) {
-        next.packageName = suggestPackageName(value);
-      }
-      return next;
-    });
-    setErrors((prev) => ({ ...prev, [key]: undefined }));
-  };
+  const update = (key: Exclude<keyof BuildFormConfig, "iconFile">) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      if (key === "packageName") packageTouched.current = true;
+      setConfig((prev) => {
+        const next = { ...prev, [key]: value };
+        if (key === "appName" && !packageTouched.current) {
+          next.packageName = suggestPackageName(value);
+        }
+        return next;
+      });
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    };
 
   const reset = () => {
     setResult(null);
@@ -78,7 +83,7 @@ export function BuilderPanel() {
       packageName: config.packageName.trim(),
       versionName: config.versionName.trim(),
       versionCode: config.versionCode.trim(),
-      iconUrl: config.iconUrl.trim(),
+      iconFile: config.iconFile,
     });
 
     setStage("building");
@@ -184,19 +189,19 @@ export function BuilderPanel() {
           />
         </div>
 
-        <Field
-          id="iconUrl"
-          label="Icon URL"
-          type="url"
-          inputMode="url"
-          placeholder="https://yourwebsite.com/icon.png"
-          hint="Direct link to a square PNG, 512×512 recommended."
-          value={config.iconUrl}
-          onChange={update("iconUrl")}
-          error={errors.iconUrl}
+        <IconUpload
+          file={config.iconFile}
+          error={errors.iconFile}
+          onChange={(file, error) => {
+            setConfig((prev) => ({ ...prev, iconFile: file }));
+            setErrors((prev) => {
+              const next = { ...prev };
+              if (error) next.iconFile = error;
+              else delete next.iconFile;
+              return next;
+            });
+          }}
         />
-
-        <IconPreview url={config.iconUrl} appName={config.appName} />
 
         {failure && (
           <div

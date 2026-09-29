@@ -27,11 +27,11 @@ const FIELDS = [
   ["Package Name", "Reverse-domain Android identifier, e.g. com.frenytech.myapp. Lowercase, at least two segments, no reserved keywords."],
   ["Version Name", "Human-readable release version such as 1.0.0"],
   ["Version Code", "Whole number starting at 1. Increase it for every new release."],
-  ["Icon URL", "Direct link to a square PNG. 512×512 gives the best result on modern devices."],
+  ["App Icon", "Choose a PNG, JPG, JPEG, or WEBP image from your device. A square 512×512 image gives the best result."],
 ];
 
 const ISSUES = [
-  ["The build failed immediately", "Usually an unreachable website URL or an icon URL that is not a direct image link. Open both URLs in a new tab to confirm."],
+  ["The build failed immediately", "Confirm that your website is publicly reachable and your icon is a supported image no larger than 5 MB."],
   ["The build timed out", "Large sites take longer. Wait a few minutes and run the build again — no partial APK is created."],
   ["No download link was returned", "The build service completed without issuing a link. Re-run the build; nothing is cached."],
   ["The APK will not install", "Enable installation from unknown sources on the device, and make sure the version code is higher than any previously installed build with the same package name."],

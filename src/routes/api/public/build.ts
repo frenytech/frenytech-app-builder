@@ -5,6 +5,9 @@ import type { BuildConfig, BuildResponse } from "@/types/build";
 
 const UPSTREAM_URL = "https://web2apk.benfeitech.com/api/build";
 const UPSTREAM_TIMEOUT_MS = 9 * 60 * 1000;
+const ICON_BUCKET = "apk-build-icons";
+const MAX_ICON_BYTES = 5 * 1024 * 1024;
+const ALLOWED_ICON_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 const json = (payload: BuildResponse, status: number): Response =>
   new Response(JSON.stringify(payload), {
@@ -14,15 +17,14 @@ const json = (payload: BuildResponse, status: number): Response =>
 
 const asString = (value: unknown): string => (typeof value === "string" ? value.trim() : "");
 
-function readConfig(body: unknown): BuildConfig {
-  const source = (body ?? {}) as Record<string, unknown>;
+function readConfig(source: Record<string, unknown>, iconUrl: string): BuildConfig {
   return {
     websiteUrl: asString(source["websiteUrl"]),
     appName: asString(source["appName"]),
     packageName: asString(source["packageName"]),
     versionName: asString(source["versionName"]) || "1.0.0",
     versionCode: asString(source["versionCode"]) || "1",
-    iconUrl: asString(source["iconUrl"]),
+    iconUrl,
   };
 }
 
@@ -30,9 +32,9 @@ export const Route = createFileRoute("/api/public/build")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        let body: unknown;
+        let formData: FormData;
         try {
-          body = await request.json();
+          formData = await request.formData();
         } catch {
           return json(
             {
@@ -44,9 +46,64 @@ export const Route = createFileRoute("/api/public/build")({
           );
         }
 
-        const config = readConfig(body);
+        const icon = formData.get("icon");
+        if (!(icon instanceof File) || !ALLOWED_ICON_TYPES.has(icon.type) || icon.size > MAX_ICON_BYTES) {
+          return json(
+            {
+              success: false,
+              code: "validation_failed",
+              message: "Choose a PNG, JPG, JPEG, or WEBP icon no larger than 5 MB.",
+            },
+            400,
+          );
+        }
+
+        const fields: Record<string, unknown> = {};
+        for (const key of ["websiteUrl", "appName", "packageName", "versionName", "versionCode"]) {
+          fields[key] = formData.get(key);
+        }
+
+        const extension = icon.type === "image/png" ? "png" : icon.type === "image/webp" ? "webp" : "jpg";
+        const storagePath = `builds/${crypto.randomUUID()}.${extension}`;
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const iconBytes = await icon.arrayBuffer();
+        const { error: uploadError } = await supabaseAdmin.storage
+          .from(ICON_BUCKET)
+          .upload(storagePath, iconBytes, { contentType: icon.type, upsert: false });
+
+        if (uploadError) {
+          console.error("[web2apk] icon upload failed", uploadError.message);
+          return json(
+            {
+              success: false,
+              code: "icon_upload_failed",
+              message: "The icon could not be prepared for the build. Please try again.",
+            },
+            502,
+          );
+        }
+
+        const { data: signedIcon, error: signedUrlError } = await supabaseAdmin.storage
+          .from(ICON_BUCKET)
+          .createSignedUrl(storagePath, 15 * 60);
+
+        if (signedUrlError || !signedIcon?.signedUrl) {
+          await supabaseAdmin.storage.from(ICON_BUCKET).remove([storagePath]);
+          console.error("[web2apk] icon URL signing failed", signedUrlError?.message);
+          return json(
+            {
+              success: false,
+              code: "icon_upload_failed",
+              message: "The icon could not be prepared for the build. Please try again.",
+            },
+            502,
+          );
+        }
+
+        const config = readConfig(fields, signedIcon.signedUrl);
         const errors = validateBuildConfig(config);
         if (hasErrors(errors)) {
+          await supabaseAdmin.storage.from(ICON_BUCKET).remove([storagePath]);
           return json(
             {
               success: false,
@@ -98,6 +155,11 @@ export const Route = createFileRoute("/api/public/build")({
                 },
             504,
           );
+        } finally {
+          const { error: cleanupError } = await supabaseAdmin.storage
+            .from(ICON_BUCKET)
+            .remove([storagePath]);
+          if (cleanupError) console.error("[web2apk] icon cleanup failed", cleanupError.message);
         }
 
         let payload: unknown;

@@ -1,4 +1,4 @@
-import type { BuildConfig, BuildResponse } from "@/types/build";
+import type { BuildFormConfig, BuildResponse } from "@/types/build";
 
 const CLIENT_TIMEOUT_MS = 10 * 60 * 1000; // APK builds legitimately take minutes.
 
@@ -6,15 +6,22 @@ const CLIENT_TIMEOUT_MS = 10 * 60 * 1000; // APK builds legitimately take minute
  * Calls our own server route. The browser never talks to the upstream
  * Web2APK service and never sees its raw response.
  */
-export async function requestBuild(config: BuildConfig): Promise<BuildResponse> {
+export async function requestBuild(config: BuildFormConfig): Promise<BuildResponse> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
 
   try {
+    const formData = new FormData();
+    formData.set("websiteUrl", config.websiteUrl);
+    formData.set("appName", config.appName);
+    formData.set("packageName", config.packageName);
+    formData.set("versionName", config.versionName);
+    formData.set("versionCode", config.versionCode);
+    if (config.iconFile) formData.set("icon", config.iconFile);
+
     const response = await fetch("/api/public/build", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(config),
+      body: formData,
       signal: controller.signal,
     });
 
